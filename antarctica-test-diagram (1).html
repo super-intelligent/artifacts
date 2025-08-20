@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Antarctica Test - Entity Grounding Infrastructure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #00f2fe 0%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .header .subtitle {
+            color: #888;
+            font-size: 18px;
+            font-weight: 300;
+        }
+        
+        .cia-badge {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #ff0000;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            transform: rotate(15deg);
+            box-shadow: 0 4px 15px rgba(255,0,0,0.3);
+        }
+        
+        .levels-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .level-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .level-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, currentColor, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .level-card.level-1 { border-color: #ff6b6b; }
+        .level-card.level-1::before { background: linear-gradient(90deg, transparent, #ff6b6b, transparent); }
+        
+        .level-card.level-2 { border-color: #ffd93d; }
+        .level-card.level-2::before { background: linear-gradient(90deg, transparent, #ffd93d, transparent); }
+        
+        .level-card.level-3 { border-color: #6bcf7f; }
+        .level-card.level-3::before { background: linear-gradient(90deg, transparent, #6bcf7f, transparent); }
+        
+        .level-card.level-4 { border-color: #4facfe; }
+        .level-card.level-4::before { background: linear-gradient(90deg, transparent, #4facfe, transparent); }
+        
+        .level-number {
+            font-size: 72px;
+            font-weight: 900;
+            opacity: 0.1;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        
+        .level-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .level-range {
+            color: #00f2fe;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .level-description {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .level-stats {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #00f2fe;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+        }
+        
+        .infrastructure-map {
+            background: rgba(0,0,0,0.5);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .map-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .world-visualization {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 300px;
+            position: relative;
+        }
+        
+        .data-center {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .data-center:hover {
+            transform: scale(1.1);
+        }
+        
+        .dc-local {
+            background: radial-gradient(circle, rgba(255,107,107,0.3), transparent);
+            border: 2px solid #ff6b6b;
+        }
+        
+        .dc-regional {
+            background: radial-gradient(circle, rgba(255,217,61,0.3), transparent);
+            border: 2px solid #ffd93d;
+        }
+        
+        .dc-continental {
+            background: radial-gradient(circle, rgba(107,207,127,0.3), transparent);
+            border: 2px solid #6bcf7f;
+        }
+        
+        .dc-antarctica {
+            background: radial-gradient(circle, rgba(79,172,254,0.3), transparent);
+            border: 2px solid #4facfe;
+            animation: pulse 2s ease infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .dc-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .dc-icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f2fe, transparent);
+            top: 50%;
+            animation: flow 3s linear infinite;
+        }
+        
+        @keyframes flow {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .kgm-section {
+            background: linear-gradient(135deg, rgba(79,172,254,0.1), rgba(0,242,254,0.1));
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(79,172,254,0.3);
+        }
+        
+        .kgm-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .kgm-badge {
+            background: #ff0000;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .kgm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .kgm-item {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 3px solid #00f2fe;
+        }
+        
+        .kgm-item-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #00f2fe;
+        }
+        
+        .kgm-item-value {
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .timeline {
+            background: rgba(255,255,255,0.02);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .timeline-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .timeline-track {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b 0%, #ffd93d 33%, #6bcf7f 66%, #4facfe 100%);
+            border-radius: 2px;
+        }
+        
+        .timeline-items {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .timeline-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .timeline-marker {
+            width: 20px;
+            height: 20px;
+            background: #1a1a2e;
+            border: 3px solid currentColor;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+        }
+        
+        .timeline-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .timeline-duration {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .footer-note {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .footer-note a {
+            color: #00f2fe;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="cia-badge">CIA INFRASTRUCTURE</div>
+            <h1>The Antarctica Test</h1>
+            <div class="subtitle">Entity Grounding Through Military-Grade Infrastructure</div>
+        </div>
+        
+        <div class="levels-container">
+            <div class="level-card level-1">
+                <div class="level-number">1</div>
+                <div class="level-title">Local Recognition</div>
+                <div class="level-range">🎯 100 MILE RADIUS</div>
+                <div class="level-description">
+                    Your entity appears only near your physical location. Basic verification achieved but no infrastructure propagation.
+                </div>
+                <div class="level-stats">
+                    <div class="stat">
+                        <div class="stat-value">24hr</div>
+                        <div class="stat-label">Typical Time</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">95%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="level-card level-2">
+                <div class="level-number">2</div>
+                <div class="level-title">Regional Propagation</div>
+                <div class="level-range">⚡ 500+ MILE REACH</div>
+                <div class="level-description">
+                    Knowledge panel appears from distant cities. Machine ID has propagated beyond local data center.
+                </div>
+                <div class="level-stats">
+                    <div class="stat">
+                        <div class="stat-value">2-8wk</div>
+                        <div class="stat-label">Timeline</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">70%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="level-card level-3">
+                <div class="level-number">3</div>
+                <div class="level-title">Continental Grounding</div>
+                <div class="level-range">🌎 COAST TO COAST</div>
+                <div class="level-description">
+                    Entity recognized from Portland to Portland, Miami to Seattle. Cross-continental infrastructure confirmation.
+                </div>
+                <div class="level-stats">
+                    <div class="stat">
+                        <div class="stat-value">2-4mo</div>
+                        <div class="stat-label">Timeline</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">40%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="level-card level-4">
+                <div class="level-number">4</div>
+                <div class="level-title">Antarctica Test</div>
+                <div class="level-range">🌐 GLOBAL INFRASTRUCTURE</div>
+                <div class="level-description">
+                    Entity appears from Antarctica VPN. Complete global recognition through edge infrastructure. Zero commercial value = pure entity validation.
+                </div>
+                <div class="level-stats">
+                    <div class="stat">
+                        <div class="stat-value">3-6mo</div>
+                        <div class="stat-label">Timeline</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">15%</div>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="infrastructure-map">
+            <div class="map-title">KGM ID Propagation Path</div>
+            <div class="world-visualization">
+                <div class="connection-line" style="width: 80%; left: 10%;"></div>
+                
+                <div class="data-center dc-local">
+                    <div class="dc-icon">📍</div>
+                    <div class="dc-label">LOCAL</div>
+                </div>
+                
+                <div class="data-center dc-regional">
+                    <div class="dc-icon">🗺️</div>
+                    <div class="dc-label">REGIONAL</div>
+                </div>
+                
+                <div class="data-center dc-continental">
+                    <div class="dc-icon">🌎</div>
+                    <div class="dc-label">CONTINENTAL</div>
+                </div>
+                
+                <div class="data-center dc-antarctica">
+                    <div class="dc-icon">🧊</div>
+                    <div class="dc-label">ANTARCTICA</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="kgm-section">
+            <div class="kgm-title">
+                KGM Infrastructure Stack
+                <span class="kgm-badge">CLASSIFIED</span>
+            </div>
+            <div class="kgm-grid">
+                <div class="kgm-item">
+                    <div class="kgm-item-title">Original System</div>
+                    <div class="kgm-item-value">Keyhole Earth Viewer</div>
+                </div>
+                <div class="kgm-item">
+                    <div class="kgm-item-title">CIA Vendor</div>
+                    <div class="kgm-item-value">In-Q-Tel</div>
+                </div>
+                <div class="kgm-item">
+                    <div class="kgm-item-title">Acquisition</div>
+                    <div class="kgm-item-value">$500M (2004)</div>
+                </div>
+                <div class="kgm-item">
+                    <div class="kgm-item-title">Daily Queries</div>
+                    <div class="kgm-item-value">8.5 Billion</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline">
+            <div class="timeline-title">Typical Grounding Timeline</div>
+            <div class="timeline-track">
+                <div class="timeline-line"></div>
+                <div class="timeline-items">
+                    <div class="timeline-item" style="color: #ff6b6b;">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-label">Level 1</div>
+                        <div class="timeline-duration">Immediate</div>
+                    </div>
+                    <div class="timeline-item" style="color: #ffd93d;">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-label">Level 2</div>
+                        <div class="timeline-duration">2-8 weeks</div>
+                    </div>
+                    <div class="timeline-item" style="color: #6bcf7f;">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-label">Level 3</div>
+                        <div class="timeline-duration">2-4 months</div>
+                    </div>
+                    <div class="timeline-item" style="color: #4facfe;">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-label">Level 4</div>
+                        <div class="timeline-duration">3-6 months</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-note">
+            Infrastructure doesn't lie. When you pass the Antarctica Test, Google's half-trillion-dollar system has committed to your entity globally.<br>
+            <a href="#">Complete MEO Rising Tide system available to members →</a>
+        </div>
+    </div>
+</body>
+</html>
